@@ -1,7 +1,14 @@
 #/bin/bash
 
-answerkey="./answerkey"
-# $0 will be file to grade
+usage(){
+	echo "Usage: mcgrade.sh  <test to be graded>"
+	exit 1
+}
+
+answerkey="/home/jrm4/all/storage/school/5362/hw01/answerkey"
+
+#answers, for me, are in zipped directories 
+echo "grading $(pwd)";
 
 # Load answer key into array - for now, key will be UNNUMBERED list of answers. 
 
@@ -22,16 +29,26 @@ let numberright=0
 let numberwrong=0
 
 while read testline; do
+	
+# echo "testline = $testline" # TEST ****
+	#Leave only first two fields (darn you do-gooders who type out the whole answer) 
+	testlinecut="$(echo $testline | cut -d" " -f1,2)"
+	#echo "testlinecut = $testlinecut" # TEST **** 	
+	# Convert to lowercase
+	testlinelower="${testlinecut,,}"
 #	echo "$i correct answer is ${keyarray[i]}"
 #	echo "$i guess is $testline"
-	if [[ "$testline" == *"${keyarray[i]}"* ]];  then
+	if [[ "${testlinelower}" == *"${keyarray[i]}"* ]];  then
 		echo "$testline"
 		((numberright++))
 	else
-		echo "$testline incorrect, answer is ${keyarray[i]}"
+		echo "X ${testlinecut} incorrect, answer is ${keyarray[i]}"
 		((numberwrong++))
 	fi
 		((i++))
 done < $1
 
-echo "Test taker got $numberright right and $numberwrong wrong"
+echo "Results for $(pwd)"
+echo "$numberright right and $numberwrong wrong"
+echo "---------------------------------------------------------------------------------------"
+
