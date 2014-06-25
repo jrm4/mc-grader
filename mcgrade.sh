@@ -5,9 +5,9 @@ usage(){
 	exit 1
 }
 
-answerkey="/home/jrm4/all/storage/school/5362/hw01/answerkey"
+answerkey="/home/jrm4/all/storage/school/5362/hw02/answerkey"
 
-#answers, for me, are in zipped directories 
+#answers, for me, are in unzipped directories 
 echo "grading $(pwd)";
 
 # Load answer key into array - for now, key will be UNNUMBERED list of answers. 
@@ -21,32 +21,37 @@ while read answerline; do  #shouldn't have to ifs here
 
 done < $answerkey
 
+#Thanks to stupid DOS newlines, will now be using a tempfile. This will leave original stupid DOS file untouched.
 
-# skipping graded file cleanup, which will consist of sorting and removing blank lines.
+tempfile="$(mktemp)"
+tr '\r' '\n' < "${1}" > "${tempfile}"
 
 let i=1 #ditto
 let numberright=0
 let numberwrong=0
 
 while read testline; do
-	
-# echo "testline = $testline" # TEST ****
+
+	testline="$(echo $testline | tr '\r' '\n')"
 	#Leave only first two fields (darn you do-gooders who type out the whole answer) 
-	testlinecut="$(echo $testline | cut -d" " -f1,2)"
-	#echo "testlinecut = $testlinecut" # TEST **** 	
+	testlinecut="$(echo $testline | cut -d" " -f1,2)"	
 	# Convert to lowercase
 	testlinelower="${testlinecut,,}"
-#	echo "$i correct answer is ${keyarray[i]}"
-#	echo "$i guess is $testline"
+
+	#here's the magic. Yes, "abcd" defeats this. Unless you use your human eyes. 
 	if [[ "${testlinelower}" == *"${keyarray[i]}"* ]];  then
-		echo "$testline"
+		echo "${testline}"
 		((numberright++))
+	elif  [[ "${keyarray[i]}" == "OVERRIDE" ]]; then
+			echo "${testline} - OVERRIDE, BAD QUESTION"
+			((numberright++))
 	else
-		echo "X ${testlinecut} incorrect, answer is ${keyarray[i]}"
+		echo "${testline} incorrect, answer is ${keyarray[i]}"
 		((numberwrong++))
 	fi
 		((i++))
-done < $1
+
+done < "${tempfile}"
 
 echo "Results for $(pwd)"
 echo "$numberright right and $numberwrong wrong"
